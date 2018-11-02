@@ -1,3 +1,14 @@
+#data
+/data/*
+data
+data/*
+*.txt
+
+
+#model
+*.ckpt
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
