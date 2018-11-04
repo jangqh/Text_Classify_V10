@@ -14,7 +14,7 @@ import tensorflow as tf
 import numpy as np
 #from bert_model import BertModel  # todo
 #from bert_cnn_model import BertCNNModel as BertModel
-#from data_util_hdf5 import create_or_load_vocabulary, load_data_mutilabel
+from data_util_hdf5 import create_or_load_vocabulary, load_data_mutilabel
 #from data_util_hdf5 import assign_pretrained_word_embedding, set_config
 import os
 #from evaluation_matrix import *
@@ -31,7 +31,7 @@ FLAGS=tf.app.flags.FLAGS
 tf.app.flags.DEFINE_boolean("test_mode", False, \
         "如果是测试模式， 少量数据被用到")
 tf.app.flags.DEFINE_string("data_path", './data', "训练数据目录")
-tf.app.flags.DEFINE_string("mask_lm_source_file", './data/bert_train2.txt',\
+tf.app.flags.DEFINE_string("mask_lm_source_file", './data/bert_train.txt',\
         "训练数据")
 tf.app.flags.DEFINE_string("ckpt_dir", './checkpoint_lm', \
         'checkpoint location for the model')
@@ -78,7 +78,11 @@ def main(_):
     vocab_word2index, _ = create_or_load_vocabulary(FLAGS.data_path, \
             FLAGS.mask_lm_source_file, FLAGS.vocab_size, \
             test_mode=FLAGS.test_mode, tokenize_style=FLAGS.tokenize_style)
+    vocab_size = len(vocab_word2index)
+    tf.logging.info("bert pretrain vocab size: %d", vocab_size)
+    index2word = {v:k for k,v in vocab_word2index.items()}
+    train, valid, test = mask_language_model(FLAGS.mask_lm_source_file, )
 
-
+    
 if __name__ == '__main__':
     tf.app.run()
