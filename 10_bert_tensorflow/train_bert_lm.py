@@ -14,16 +14,16 @@ import tensorflow as tf
 import numpy as np
 #from bert_model import BertModel  # todo
 #from bert_cnn_model import BertCNNModel as BertModel
-from data_util_hdf5 import create_or_load_vocabulary, load_data_mutilabel
+from data_util_hdf5 import create_or_load_vocabulary, load_data_multilabel
 #from data_util_hdf5 import assign_pretrained_word_embedding, set_config
 import os
 #from evaluation_matrix import *
-#from pretrain_task import mask_language_model, \
-#        mask_language_model_multi_processing
-#from config import Config
+from pretrain_task import mask_language_model, \
+        mask_language_model_multi_processing
+from config import Config
 import random
 from datetime import datetime
-
+import logging
 
 #configuation
 FLAGS=tf.app.flags.FLAGS
@@ -65,7 +65,6 @@ tf.app.flags.DEFINE_boolean("use_pretained_embedding", False, \
 #data/sgns.target.word-word.dynwin5.thr10.neg5.dim300.iter5--->
 #data/news_12g_baidubaike_20g_novel_90g_embedding_64.bin--->
 #sgns.merge.char
-tf.app.flags.DEFINE_integer("process_num",35,"number of cpu process")
 tf.app.flags.DEFINE_string("word2vec_model_path",  \
         "./data/Tecent_AILab_ChineseEmbedding.txt", \
         "word2vec's vocabulary and vectors")
@@ -79,9 +78,22 @@ def main(_):
             FLAGS.mask_lm_source_file, FLAGS.vocab_size, \
             test_mode=FLAGS.test_mode, tokenize_style=FLAGS.tokenize_style)
     vocab_size = len(vocab_word2index)
-    tf.logging.info("bert pretrain vocab size: %d", vocab_size)
+    logging.info("bert pretrain vocab size: %d" % vocab_size)
     index2word = {v:k for k,v in vocab_word2index.items()}
-    train, valid, test = mask_language_model(FLAGS.mask_lm_source_file, )
+    train, valid, test = mask_language_model(FLAGS.mask_lm_source_file, \
+            FLAGS.data_path, index2word, max_allow_sentence_length= \
+            FLAGS.max_allow_sentence_length, test_mode=FLAGS.test_mode, \
+            process_num=FLAGS.process_num)
+    
+    train_X, train_y, train_p = train
+    valid_X, valid_y, valid_p = valid
+    test_X, test_y, test_p = test
+    print("train_X:{}, train_y:{}, train_p:{}".format(train_X.shape, \
+            train_y.shape, train_p.shape))
+
+    #1.create session
+    gpu_config = tf.ConfigProto()
+    gpu_config.gpu_options.allow_growth = True
 
     
 if __name__ == '__main__':

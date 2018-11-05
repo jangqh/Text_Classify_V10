@@ -18,18 +18,25 @@ LABEL_SPLITER = '__label__'
 
 PAD_ID = 0
 UNK_ID = 1
-CLC_IS = 2
+CLS_ID = 2
 MASK_ID = 3
 _PAD = "PAD"
 _UNK = "UNK"
 _CLS = "CLS"
-_MASK = ""MASK
+_MASK = "MASK"
 
 def build_chunk(lines, chunk_num=10):
     """
     """
     pass
 
+
+def load_data_multilabel(data_path,training_data_path, valid_data_path, \
+        test_data_path, vocab_word2index, label2index, sentence_len, \
+        process_num=20, test_mode=False,tokenize_style='word', model_name=None):
+    """加载word和标签
+    """
+    pass
 
 def create_or_load_vocabulary(data_path, training_data_path, vocab_size, \
         test_mode=False, tokenize_style='word', fine_tuning_stage=False, \
@@ -54,7 +61,7 @@ def create_or_load_vocabulary(data_path, training_data_path, vocab_size, \
     
     tf.logging.info("cache_path:", cache_path, "file_exists:", \
             os.path.exists(cache_path))
-    if os.path.exists(cache_path):
+    if False and os.path.exists(cache_path):
         with open(cache_path, 'rb') as cache_f:
             print("to load cache file,vocab of words and labels")
             return pickle.load(cache_f)
@@ -68,7 +75,7 @@ def create_or_load_vocabulary(data_path, training_data_path, vocab_size, \
     if test_mode:
         lines = lines[0:20000]
     else:
-        lines = lines[0:200*1] #为了处理的快，只选择200klines 
+        lines = lines[0:200*1000] #为了处理的快，只选择200klines 
 
     #3.loop each line, put to counter
     c_inputs = Counter()
@@ -79,21 +86,41 @@ def create_or_load_vocabulary(data_path, training_data_path, vocab_size, \
                 tokenize_style=tokenize_style)
         c_inputs.update(input_list)
         c_labels.update(input_label)
-        if i % 100 == 0:
+        if i % 1000 == 0:
             print("_id:",i, "create_or_load_vocabulary line:", line)
             print("_id:",i, "label:",input_label, "input_list:", input_list)
     
     #4.get most frequency words and all labels
     if tokenize_style == 'char':
         vocab_size = 6000 
+    vocab_word2index = {}
     vocab_list = c_inputs.most_common(vocab_size)
     vocab_word2index[_PAD] = PAD_ID
-    vocab_word2index[_UNK] = UNK_PAD
-    vocab_word2index[_CLS] = CLC_ID
+    vocab_word2index[_UNK] = UNK_ID
+    vocab_word2index[_CLS] = CLS_ID
     vocab_word2index[_MASK] = MASK_ID
-    pdb.set_trace()
-    #for i,tuplee in enumerate(vocab_list):
+    #pdb.set_trace()
+    for i,t in enumerate(vocab_list):
+        word, freq = t
+        vocab_word2index[word] = i+4
+    
+    label2index = {}
+    label_list = c_labels.most_common()
+    for i,t in enumerate(label_list):
+        label_name, freq = t
+        label_name = label_name.strip()
+        label2index[label_name]=i
 
+    #5.save to file system if vocabulary of words not exists
+    if not os.path.exists(cache_path):
+        with open(cache_path, 'ab') as f:
+            print("going to save cache file of vocab of words and labels")
+            pickle.dump((vocab_word2index, label2index), f)
+
+    t2 = time.clock()
+    print("create vocabulary ended time spent for generate training data:", \
+            (t2-t1))
+    return vocab_word2index, label2index
 
 
 def  get_input_string_and_labels(line, tokenize_style='word'):
