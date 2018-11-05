@@ -11,19 +11,9 @@ import json
 import jieba
 import tensorflow as tf
 from model.config import Config
-import pdb
 
-#定义常量
 LABEL_SPLITER = '__label__'
 
-PAD_ID = 0
-UNK_ID = 1
-CLC_IS = 2
-MASK_ID = 3
-_PAD = "PAD"
-_UNK = "UNK"
-_CLS = "CLS"
-_MASK = ""MASK
 
 def build_chunk(lines, chunk_num=10):
     """
@@ -68,57 +58,16 @@ def create_or_load_vocabulary(data_path, training_data_path, vocab_size, \
     if test_mode:
         lines = lines[0:20000]
     else:
-        lines = lines[0:200*1] #为了处理的快，只选择200klines 
+        lines = lines[0:200*1000] #为了处理的快，只选择200klines 
 
     #3.loop each line, put to counter
     c_inputs = Counter()
     c_labels = Counter()
     for i,line in enumerate(lines):
-        #print(line)
         input_list, input_label = get_input_string_and_labels(line, \
                 tokenize_style=tokenize_style)
-        c_inputs.update(input_list)
-        c_labels.update(input_label)
-        if i % 100 == 0:
-            print("_id:",i, "create_or_load_vocabulary line:", line)
-            print("_id:",i, "label:",input_label, "input_list:", input_list)
-    
-    #4.get most frequency words and all labels
-    if tokenize_style == 'char':
-        vocab_size = 6000 
-    vocab_list = c_inputs.most_common(vocab_size)
-    vocab_word2index[_PAD] = PAD_ID
-    vocab_word2index[_UNK] = UNK_PAD
-    vocab_word2index[_CLS] = CLC_ID
-    vocab_word2index[_MASK] = MASK_ID
-    pdb.set_trace()
-    #for i,tuplee in enumerate(vocab_list):
 
 
-
-def  get_input_string_and_labels(line, tokenize_style='word'):
-    """get input string and label
-    """
-    element_list = line.strip().split(LABEL_SPLITER)
-    input_strings = element_list[0]
-    input_list = token_string_as_list(input_strings,
-            tokenize_style=tokenize_style)
-    input_labels = element_list[1:]
-    input_labels = [str(label).strip() for label in input_labels \
-            if label.strip()]
-    return input_list, input_labels
-
-def token_string_as_list(string, tokenize_style='word'):
-    if random.randint(0,500) == 1:
-        print("toke_string-as_list.string:",string, 
-                "tokenize_style:", tokenize_style)
-    length = len(string)
-    if tokenize_style == 'char':
-        listt = [string[i] for i in range(length)]
-    elif tokenize_style == 'word':
-        listt = jieba.cut(string)
-    listt = [x for x in listt if x.strip()]
-    return listt
 
 
 if __name__ == '__main__':
